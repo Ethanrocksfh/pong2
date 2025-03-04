@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #222;
+            height: 100vh;
+        }
+        .game-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            background-color: black;
+            border: 2px solid white;
+        }
+        .paddle {
+            position: absolute;
+            width: 10px;
+            height: 60px;
+            background-color: white;
+        }
+        .ball {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: white;
+            border-radius: 50%;
+        }
+        .score {
+            position: absolute;
+            top: 10px;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, sans-serif;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="paddle" id="left-paddle" style="left: 0;"></div>
+        <div class="paddle" id="right-paddle" style="right: 0;"></div>
+        <div class="ball" id="ball"></div>
+        <div class="score" id="score">0 - 0</div>
+    </div>
+
+    <script>
+        const leftPaddle = document.getElementById('left-paddle');
+        const rightPaddle = document.getElementById('right-paddle');
+        const ball = document.getElementById('ball');
+        const scoreDisplay = document.getElementById('score');
+        const gameContainer = document.querySelector('.game-container');
+
+        let leftPaddleY = 150;
+        let rightPaddleY = 150;
+        let ballX = 292.5, ballY = 192.5, ballSpeedX = 2, ballSpeedY = 2;
+        const paddleSpeed = 4;  // Adjusted for smoother movement
+        const ballSpeed = 2;
+        const gameHeight = gameContainer.clientHeight;
+        const gameWidth = gameContainer.clientWidth;
+
+        // Scores
+        let leftScore = 0;
+        let rightScore = 0;
+
+        // Paddle Movement
+        const keysPressed = {
+            ArrowUp: false,
+            ArrowDown: false,
+            w: false,
+            s: false
+        };
+
+        // Move paddles smoothly
+        function movePaddles() {
+            if (keysPressed['ArrowUp']) leftPaddleY -= paddleSpeed;
+            if (keysPressed['ArrowDown']) leftPaddleY += paddleSpeed;
+            if (keysPressed['w']) rightPaddleY -= paddleSpeed;
+            if (keysPressed['s']) rightPaddleY += paddleSpeed;
+
+            if (leftPaddleY < 0) leftPaddleY = 0;
+            if (leftPaddleY > gameHeight - leftPaddle.offsetHeight) leftPaddleY = gameHeight - leftPaddle.offsetHeight;
+            if (rightPaddleY < 0) rightPaddleY = 0;
+            if (rightPaddleY > gameHeight - rightPaddle.offsetHeight) rightPaddleY = gameHeight - rightPaddle.offsetHeight;
+
+            leftPaddle.style.top = leftPaddleY + 'px';
+            rightPaddle.style.top = rightPaddleY + 'px';
+        }
+
+        // Move the ball
+        function moveBall() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Ball bouncing off top and bottom walls
+            if (ballY <= 0 || ballY >= gameHeight - ball.offsetHeight) {
+                ballSpeedY = -ballSpeedY;
+                increaseBallSpeed();  // Speed up the ball after hitting a wall
+            }
+
+            // Ball bouncing off left paddle
+            if (ballX <= leftPaddle.offsetWidth && ballY >= leftPaddleY && ballY <= leftPaddleY + leftPaddle.offsetHeight) {
+                ballSpeedX = -ballSpeedX;
+                increaseBallSpeed();  // Speed up the ball after hitting the left paddle
+            }
+
+            // Ball bouncing off right paddle
+            if (ballX >= gameWidth - ball.offsetWidth - rightPaddle.offsetWidth && ballY >= rightPaddleY && ballY <= rightPaddleY + rightPaddle.offsetHeight) {
+                ballSpeedX = -ballSpeedX;
+                increaseBallSpeed();  // Speed up the ball after hitting the right paddle
+            }
+
+            // Ball resetting when going out of bounds (either on the left or right side)
+            if (ballX <= 0) {
+                rightScore += 1; // Player 2 scores
+                updateScore();
+                resetBall();
+            }
+
+            if (ballX >= gameWidth - ball.offsetWidth) {
+                leftScore += 1; // Player 1 scores
+                updateScore();
+                resetBall();
+            }
+
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+        }
+
+        // Update the score
+        function updateScore() {
+            scoreDisplay.textContent = `${leftScore} - ${rightScore}`;
+        }
+
+        // Reset the ball to the center
+        function resetBall() {
+            ballX = 292.5;
+            ballY = 192.5;
+            ballSpeedX = 2;  // Reset ball horizontal speed
+            ballSpeedY = 2;  // Reset ball vertical speed
+        }
+
+        // Increase ball speed slightly
+        function increaseBallSpeed() {
+            ballSpeedX *= 1.05;  // Increase horizontal speed by 5%
+            ballSpeedY *= 1.05;  // Increase vertical speed by 5%
+        }
+
+        // Handle key press
+        function keyDownHandler(e) {
+            if (e.key in keysPressed) {
+                keysPressed[e.key] = true;
+            }
+        }
+
+        // Handle key release
+        function keyUpHandler(e) {
+            if (e.key in keysPressed) {
+                keysPressed[e.key] = false;
+            }
+        }
+
+        // Listen for key events to control paddles
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+
+        // Game loop to update positions of paddles and ball
+        function gameLoop() {
+            movePaddles();
+            moveBall();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
